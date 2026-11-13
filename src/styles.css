@@ -1,0 +1,245 @@
+/* Design tokens from Figma (Blackjack/* variables + hardcoded values seen in the frames). */
+:root {
+  --stroke-primary: #a08806;     /* Blackjack/Stroke/Primary */
+  --dialogue: #fefdd4;           /* Blackjack/Dialogue/Primary */
+  --text-primary: #9c0000;       /* Blackjack/Text/Primary */
+  --text-secondary: #fffff3;     /* Blackjack/Text/Secondary */
+  --pill-bg: #470000;            /* Balance pill fill */
+  --deal-green: #145502;         /* Deal button */
+  --clear-red: #9c0000;          /* Clear bet button */
+  --overlay: rgba(18, 1, 1, 0.55);
+  --disabled-bg: #8f8f8f;
+  --disabled-stroke: #c4c4c4;
+  --disabled-text: #ececec;
+  --font: 'Roboto Slab', Georgia, serif;
+  --bevel: inset -1px -6px 15px rgba(0, 0, 0, 0.4), inset 1px 6px 15px rgba(243, 236, 236, 0.45);
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body, #root { margin: 0; height: 100%; }
+body {
+  background: #0c0c0c radial-gradient(ellipse at 50% 40%, #1d2b16 0%, #0c0c0c 70%);
+  font-family: var(--font);
+  color: var(--text-secondary);
+  overflow: hidden;
+  overscroll-behavior: none;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+button { font-family: inherit; border: 0; padding: 0; background: none; color: inherit; cursor: pointer; }
+button:disabled { cursor: default; }
+button:focus-visible { outline: 2px solid #ffe27a; outline-offset: 2px; }
+
+/* ---------- stage ---------- */
+.viewport { position: fixed; inset: 0; overflow: hidden; }
+.stage {
+  position: absolute; left: 50%; top: 50%;
+  width: 390px;
+  transform-origin: 0 0;
+  overflow: hidden;
+  background: #0b1f06;
+}
+@media (min-width: 521px) {
+  .stage { border-radius: 28px; box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.06); }
+}
+.abs { position: absolute; }
+
+/* ---------- table background ---------- */
+.table-bg { position: absolute; inset: 0; overflow: hidden; }
+.table-bg img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 100%; }
+.table-bg img.table-lights { mix-blend-mode: plus-lighter; pointer-events: none; }
+
+/* ---------- gold-bordered pills and buttons ---------- */
+.balance-pill {
+  position: absolute; left: 12px; top: 36px; height: 32px;
+  display: flex; align-items: center; gap: 20px; padding: 4px 8px;
+  background: var(--pill-bg); border: 2px solid var(--stroke-primary); border-radius: 13px;
+  box-shadow: inset -1px -3px 4px rgba(0, 0, 0, 0.42), inset 1px 3px 4px rgba(255, 241, 241, 0.42);
+  z-index: 30;
+}
+.balance-pill .coin { width: 20px; height: 20px; display: grid; place-items: center; }
+.balance-pill .coin img { width: 15.39px; height: 16.51px; }
+.balance-pill .amount { font-size: 12px; line-height: 24px; letter-spacing: 0.5px; min-width: 30px; display: inline-block; }
+.balance-pill .group { display: flex; align-items: center; gap: 6px; }
+
+.xp-pill {
+  position: absolute; left: 152px; top: 36px; height: 32px; padding: 0 12px 0 4px;
+  display: flex; align-items: center; gap: 6px;
+  background: #062b33; border: 2px solid #36c5d6; border-radius: 16px;
+  box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.18), inset 0 -2px 4px rgba(0, 0, 0, 0.4);
+  font-size: 12px; z-index: 30;
+}
+.xp-pill .star { width: 22px; height: 22px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #7fe3ff, #1196c9); display: grid; place-items: center; }
+.xp-pill small { font-size: 8px; color: #8fe9f5; margin-left: 2px; }
+
+/* Nerve XP pill — port of nerve-xp-pill-*.svg (48px tall) at 32px. */
+.xp-meter {
+  position: absolute; left: 152px; top: 36px; height: 32px; padding: 0 12px 0 3px;
+  display: flex; align-items: center; gap: 7px; overflow: hidden;
+  background: #15171d; border: 1px solid #2ee6c5; border-radius: 16px; z-index: 30;
+}
+.xp-fill { position: absolute; left: 0; top: 0; bottom: 0; background: linear-gradient(90deg, rgba(46,230,197,0.08), rgba(46,230,197,0.28)); pointer-events: none; }
+.xp-glow { position: absolute; inset: 0; border-radius: 16px; box-shadow: inset 0 0 12px rgba(46,230,197,0.9); pointer-events: none; }
+.xp-badge { position: relative; flex: none; }
+.xp-num { position: relative; font-size: 12px; font-weight: 800; color: #fefdd4; display: inline-block; min-width: 10px; }
+.xp-unit { position: relative; font-size: 8px; font-weight: 800; color: #2ee6c5; letter-spacing: 0.4px; margin-left: -3px; padding-top: 2px; }
+
+/* Fever meter — port of fever-meter-*.svg (80×268) at 46px wide. */
+.fever-meter { position: absolute; left: 4px; top: 136px; width: 56px; height: 188px; z-index: 30; padding: 0; }
+.fever-meter svg { display: block; overflow: visible; }
+.fever-flash {
+  position: absolute; left: 62px; top: 200px; padding: 6px 10px; border-radius: 10px; z-index: 31; white-space: nowrap;
+  background: linear-gradient(#ff8a1f, #f0442c); border: 1.5px solid #ffd23f; color: #fefdd4;
+  font-size: 12px; font-weight: 800; letter-spacing: 0.5px; box-shadow: 0 4px 14px rgba(240, 68, 44, 0.5); pointer-events: none;
+}
+.fever-tag {
+  position: absolute; height: 22px; padding: 0 8px; border-radius: 11px; display: grid; place-items: center;
+  background: linear-gradient(#ff8a1f, #f0442c); border: 1.5px solid #ffd23f; color: #fefdd4;
+  font-size: 11px; font-weight: 800; letter-spacing: 0.4px; z-index: 25; white-space: nowrap;
+}
+
+/* Floating "+N NERVE" */
+.nerve-float { position: absolute; display: flex; flex-direction: column; align-items: center; gap: 1px; font-weight: 700; }
+.nerve-float .amount { letter-spacing: 1px; text-shadow: 0 2px 6px rgba(0, 0, 0, 0.55); }
+.nerve-float .why { font-size: 10px; font-weight: 500; opacity: 0.8; letter-spacing: 0.5px; text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6); }
+
+.icon-btn { position: absolute; width: 24px; height: 24px; z-index: 30; display: grid; place-items: center; }
+.icon-btn img { width: 24px; height: 24px; }
+
+.gold-btn {
+  position: absolute; height: 50px; padding: 12px 29px;
+  border: 2px solid var(--stroke-primary); border-radius: 12px;
+  color: var(--text-secondary); font-size: 20px; font-weight: 500; line-height: 1;
+  white-space: nowrap; box-shadow: var(--bevel);
+  transition: filter 120ms, background-color 160ms, border-color 160ms, color 160ms;
+}
+.gold-btn.red { background: var(--clear-red); }
+.gold-btn.green { background: var(--deal-green); box-shadow: inset -1px -6px 15px rgba(0, 0, 0, 0.3), inset 1px 6px 15px rgba(243, 236, 236, 0.25); }
+.gold-btn:active:not(:disabled) { filter: brightness(0.82); }
+.gold-btn:disabled { background: var(--disabled-bg); border-color: var(--disabled-stroke); color: var(--disabled-text); }
+
+/* ---------- chips ---------- */
+.chip { position: absolute; width: 80px; height: 80px; border-radius: 50%; }
+.chip img { width: 80px; height: 80px; display: block; pointer-events: none; }
+.chip .label {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  font-size: 16px; line-height: 24px; letter-spacing: 0.5px; color: #fff; pointer-events: none;
+}
+.chip-ring { position: absolute; inset: -5px; border-radius: 50%; border: 3px solid #f1c232; box-shadow: 0 0 12px rgba(241, 194, 50, 0.85), inset 0 0 6px rgba(241, 194, 50, 0.6); pointer-events: none; }
+
+.bet-pill {
+  position: absolute; height: 36px; min-width: 60px; padding: 0 12px;
+  display: grid; place-items: center;
+  background: rgba(8, 30, 6, 0.75); border: 2px solid var(--stroke-primary); border-radius: 10px;
+  font-size: 18px; letter-spacing: 0.5px; color: #fff;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.5);
+}
+
+.place-bet { position: absolute; left: 0; right: 0; text-align: center; font-size: 18px; font-weight: 500; color: #fff; text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6); }
+.hint { position: absolute; left: 0; right: 0; text-align: center; font-size: 12px; color: var(--dialogue); text-shadow: 0 1px 4px #000; pointer-events: none; }
+
+/* ---------- cards ---------- */
+.card { position: absolute; left: 0; top: 0; width: 86px; height: 132px; perspective: 700px; transform-origin: 50% 50%; }
+.card-inner { position: absolute; inset: 0; transform-style: preserve-3d; }
+.card-face, .card-back { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 6px; overflow: hidden; box-shadow: -2px 3px 8px rgba(0, 0, 0, 0.45); }
+.card-face { background: #fff; transform: rotateY(0deg); }
+.card-back { transform: rotateY(180deg); }
+.card-face svg, .card-back svg { width: 100%; height: 100%; display: block; }
+
+/* ---------- hand totals ---------- */
+.total {
+  position: absolute; width: 50px; height: 50px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: radial-gradient(circle at 50% 35%, #183b0d, #07170a);
+  border: 1.5px solid var(--stroke-primary);
+  color: #fff; font-size: 16px; letter-spacing: 0.5px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+}
+.total.small { width: 40px; height: 40px; font-size: 13px; }
+.total.soft { font-size: 12px; }
+.total.small.soft { font-size: 10px; }
+.total.active { border-color: #ffd54a; box-shadow: 0 0 12px rgba(255, 213, 74, 0.8); }
+.total svg { position: absolute; inset: -4px; width: calc(100% + 8px); height: calc(100% + 8px); pointer-events: none; overflow: visible; }
+
+.hand-tag { position: absolute; padding: 2px 8px; border-radius: 8px; font-size: 11px; font-weight: 700; color: #fff; white-space: nowrap; border: 1.5px solid var(--stroke-primary); }
+.hand-tag.win, .hand-tag.blackjack { background: #1d6b1a; }
+.hand-tag.lose { background: #9c0000; }
+.hand-tag.push { background: #4b4b4b; }
+.stake-tag { position: absolute; font-size: 11px; color: var(--dialogue); text-shadow: 0 1px 3px #000; white-space: nowrap; }
+
+/* ---------- action buttons (Hit / Stand / Split / Double) ---------- */
+.action {
+  position: absolute; width: 60px; height: 60px; border-radius: 12px;
+  border: 2px solid var(--stroke-primary);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  font-size: 13px; font-weight: 500; color: #fff; line-height: 1;
+  box-shadow: inset -1px -5px 10px rgba(0, 0, 0, 0.35), inset 1px 5px 10px rgba(255, 255, 255, 0.28), 0 3px 8px rgba(0, 0, 0, 0.45);
+  transition: filter 120ms, background-color 160ms, border-color 160ms;
+}
+.action svg { width: 22px; height: 22px; }
+.action.hit { background: #173a8f; }
+.action.stand { background: #8e0c0c; }
+.action.split { background: #5a20b8; }
+.action.double { background: #1f6d1c; }
+.action:disabled { background: #6f6f6f; border-color: #a5a5a5; color: #d6d6d6; box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.35); }
+.action:disabled svg { opacity: 0.6; }
+
+/* ---------- dialogue / tooltips ---------- */
+.tip {
+  position: absolute; background: var(--dialogue); color: var(--text-primary);
+  border-radius: 10px; padding: 8px 10px; font-size: 11px; font-weight: 500; line-height: 1.3; text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35); pointer-events: none; z-index: 40;
+}
+.tip::after { content: ''; position: absolute; width: 0; height: 0; border: 8px solid transparent; }
+.tip.down::after { bottom: -14px; left: var(--tail, 50%); transform: translateX(-50%); border-top-color: var(--dialogue); border-bottom-width: 6px; }
+.tip.up::after { top: -14px; left: var(--tail, 50%); transform: translateX(-50%); border-bottom-color: var(--dialogue); border-top-width: 6px; }
+.svg-tip { position: absolute; width: 199px; height: 72px; z-index: 40; pointer-events: none; }
+.svg-tip > img { position: absolute; inset: 0; width: 199px; height: 72px; }
+.svg-tip p { position: absolute; margin: 0; color: var(--text-primary); }
+
+/* ---------- overlays ---------- */
+.dim { position: absolute; inset: 0; background: var(--overlay); z-index: 20; }
+.sheet-dim { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.6); z-index: 60; }
+.paper {
+  background: var(--dialogue);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.45 0 0 0 0 0.4 0 0 0 0 0.2 0 0 0 0.18 0'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
+  border-radius: 12px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+.dialog-btn {
+  height: 30px; padding: 0 12px; border-radius: 6px; border: 1.5px solid var(--stroke-primary);
+  background: var(--clear-red); color: var(--text-secondary); font-size: 12px; font-weight: 500;
+  box-shadow: inset -1px -3px 6px rgba(0, 0, 0, 0.35), inset 1px 3px 6px rgba(255, 255, 255, 0.35);
+}
+.dialog-btn:active { filter: brightness(0.82); }
+.close-btn {
+  position: absolute; width: 30px; height: 30px; border-radius: 50%;
+  background: var(--clear-red); border: 2px solid var(--stroke-primary); color: #fff;
+  display: grid; place-items: center; font-size: 16px; line-height: 1;
+  box-shadow: inset 1px 3px 5px rgba(255, 255, 255, 0.35), 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+.close-btn:active { filter: brightness(0.82); }
+
+.rules-title { position: absolute; left: 0; right: 0; text-align: center; font-size: 36px; font-weight: 700; color: #fff; text-shadow: 0 3px 10px rgba(0, 0, 0, 0.6); }
+.rule {
+  position: absolute; left: 30px; width: 330px; min-height: 38px; padding: 9px 12px;
+  background: var(--dialogue); color: var(--text-primary); border-radius: 8px;
+  font-size: 12px; line-height: 1.45; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+}
+.rule b { color: #6e0000; }
+.rule .g { color: #1d6b1a; }
+
+/* ---------- result toast ---------- */
+.toast {
+  position: absolute; left: 68px; width: 254px; min-height: 66px; padding: 8px 12px;
+  border-radius: 14px; border: 2px solid #d9c26a; text-align: center; z-index: 45;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.55), inset 0 2px 8px rgba(255, 255, 255, 0.25), inset 0 -4px 10px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+}
+.toast.win, .toast.blackjack { background: linear-gradient(#2a8a3a, #17602a); }
+.toast.blackjack { border-color: #ffd54a; }
+.toast.lose { background: linear-gradient(#b31212, #7a0000); }
+.toast.push { background: linear-gradient(#5b5b5b, #383838); }
+.toast h2 { margin: 0; font-size: 30px; font-weight: 700; color: #fff; text-shadow: 0 3px 0 rgba(0, 0, 0, 0.35); letter-spacing: 0.5px; }
+.toast p { margin: 2px 0 0; font-size: 14px; color: var(--dialogue); }
+.confetti { position: absolute; width: 6px; height: 10px; border-radius: 1px; }
