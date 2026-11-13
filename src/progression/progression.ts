@@ -17,9 +17,19 @@ export const PROGRESS_RULES = {
   splitSweepBonus: 5,
 };
 
+/**
+ * Prototype pacing (requested for play-testing; bypasses the doc's Fever thresholds):
+ * the Fever meter appears after `unlockAfterRounds` rounds and fills over `roundsToFill` rounds.
+ * Nerve points are still scored exactly as the doc says. Pass `null` for the doc's rules.
+ */
+export interface Pacing { unlockAfterRounds: number; roundsToFill: number }
+export const PROTOTYPE_PACING: Pacing = { unlockAfterRounds: 7, roundsToFill: 4 };
+
 export interface Progress {
   nerveTotal: number;
   fever: { unlocked: boolean; meter: number; roundsLeft: number };
+  roundsPlayed: number;
+  pacing: Pacing | null;
 }
 
 /** Per-round bookkeeping the core engine doesn't keep. */
@@ -37,17 +47,21 @@ export interface RoundAwards {
   awards: Award[];              // every non-zero award, in display order
   total: number;
   feverRound: boolean;
-  fillsMeter: boolean;          // points also went into the Fever meter
+  fillsMeter: boolean;          // this round added to the Fever meter
+  meterGain: number;            // how much it added
   unlockedNow: boolean;
   feverNet: number[];           // per-hand net coins after Fever doubling
   progressBefore: Progress;
   progressAfter: Progress;
 }
 
-export const createProgress = (nerveTotal = 0): Progress => ({
-  nerveTotal, fever: { unlocked: nerveTotal >= PROGRESS_RULES.feverUnlockAt, meter: 0, roundsLeft: 0 },
+export const createProgress = (nerveTotal = 0, pacing: Pacing | null = null): Progress => ({
+  nerveTotal,
+  fever: { unlocked: !pacing && nerveTotal >= PROGRESS_RULES.feverUnlockAt, meter: 0, roundsLeft: 0 },
+  roundsPlayed: 0,
+  pacing,
 });
-export const cloneProgress = (p: Progress): Progress => ({ nerveTotal: p.nerveTotal, fever: { ...p.fever } });
+export const cloneProgress = (p: Progress): Progress => ({ ...p, fever: { ...p.fever } });
 export const cloneTrack = (t: RoundTrack | null): RoundTrack | null => (t ? { ...t, braveTiers: [...t.braveTiers] } : null);
 
 /** k = 2 during Fever (losses are doubled), 1 otherwise. */
@@ -163,13 +177,18 @@ function settleIfOver(s: GameState, p: Progress, t: RoundTrack) {
 
   const wasUnlocked = p.fever.unlocked;
   p.nerveTotal += total;
+  p.roundsPlayed += 1;
+  // Points earned after the unlock (outside Fever) fill the meter. With prototype pacing the meter
+  // instead fills by a fixed step per round, so it is full after `roundsToFill` rounds.
   const fillsMeter = wasUnlocked && !t.feverRound;
-  if (fillsMeter) p.fever.meter += total;
-  const unlockedNow = !p.fever.unlocked && p.nerveTotal >= PROGRESS_RULES.feverUnlockAt;
+  const meterGain = !fillsMeter ? 0 : p.pacing ? PROGRESS_RULES.feverMeterSize / p.pacing.roundsToFill : total;
+  p.fever.meter += meterGain;
+  const reached = p.pacing ? p.roundsPlayed >= p.pacing.unlockAfterRounds : p.nerveTotal >= PROGRESS_RULES.feverUnlockAt;
+  const unlockedNow = !p.fever.unlocked && reached;
   if (unlockedNow) p.fever.unlocked = true;
   if (t.feverRound) p.fever.roundsLeft--;
 
-  t.result = { awards, total, feverRound: t.feverRound, fillsMeter, unlockedNow, feverNet, progressBefore: before, progressAfter: cloneProgress(p) };
+  t.result = { awards, total, feverRound: t.feverRound, fillsMeter, meterGain, unlockedNow, feverNet, progressBefore: before, progressAfter: cloneProgress(p) };
 }
 
 // ---------- Fever activation ----------

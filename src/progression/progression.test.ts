@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { buildShoe, canHit, canStand, createGame, handValue, parseCard, seededRng, nextRound, type GameState } from '../engine';
 import {
   activateFever, braveTierFor, canBetP, canDoubleP, canSplitP, coinsNeeded, createProgress, declineFever, doubleP, doubleShortP,
-  feverReady, hitP, skipFeverAd, spendXP, splitP, standP, startRoundP, PROGRESS_RULES, type Progress, type RoundTrack,
+  feverReady, hitP, skipFeverAd, spendXP, splitP, standP, startRoundP, PROGRESS_RULES, PROTOTYPE_PACING, type Progress, type RoundTrack,
 } from './progression';
 
 const rigged = (cards: string[], balance = 1000): GameState =>
@@ -217,6 +217,43 @@ describe('Fever coins', () => {
     skipFeverAd(p);
     expect(p.fever.roundsLeft).toBe(0);
     expect(coinsNeeded(s, p)).toBe('none');                       // 9 ≥ 5
+  });
+});
+
+describe('prototype pacing (7 rounds to appear, 4 rounds to fill)', () => {
+  const lose = ['10S', '10H', '7C', '9D'];          // 17 vs 19: 0 Nerve, so only rounds count
+  it('meter appears after the 7th round regardless of Nerve, fills over 4 rounds, then cycles', () => {
+    const p = createProgress(0, PROTOTYPE_PACING);
+    for (let r = 1; r <= 6; r++) { play(lose, ['stand'], p); expect(p.fever.unlocked).toBe(false); }
+    const { t } = play(lose, ['stand'], p);
+    expect(t.result!.unlockedNow).toBe(true);
+    expect(p.fever.meter).toBe(0);                    // the unlock round doesn't fill it
+    const fills = [12.5, 25, 37.5, 50];
+    for (const want of fills) { play(lose, ['stand'], p); expect(p.fever.meter).toBe(want); }
+    const s = createGame({ balance: 1000 });
+    expect(feverReady(s, p)).toBe(true);
+    activateFever(s, p);
+    expect(p.fever.meter).toBe(0);
+    expect(p.fever.roundsLeft).toBe(3);
+    for (let r = 0; r < 3; r++) { play(lose, ['stand'], p); expect(p.fever.meter).toBe(0); }
+    expect(p.fever.roundsLeft).toBe(0);               // back to normal play
+    play(lose, ['stand'], p);
+    expect(p.fever.meter).toBe(12.5);                 // and the meter starts filling again
+  });
+  it('Nerve is still scored by the doc while pacing is on', () => {
+    const p = createProgress(0, PROTOTYPE_PACING);
+    const { t } = play(['10S', '10H', '9C', '7D'], ['stand'], p);
+    expect(t.result!.total).toBe(10);
+    expect(p.nerveTotal).toBe(10);
+    expect(p.fever.unlocked).toBe(false);             // 10 Nerve, 1 round: not yet
+  });
+  it('declining resets the meter, which refills in 4 rounds', () => {
+    const p = createProgress(0, PROTOTYPE_PACING);
+    p.fever.unlocked = true; p.fever.meter = 50;
+    declineFever(createGame({ balance: 1000 }), p);
+    expect(p.fever.meter).toBe(0);
+    for (let r = 0; r < 4; r++) play(lose, ['stand'], p);
+    expect(p.fever.meter).toBe(50);
   });
 });
 

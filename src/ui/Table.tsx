@@ -15,6 +15,7 @@ import {
 } from './components/TableParts';
 import { FeverMeter, XpMeter } from './components/Meters';
 import { NerveFloats } from './components/NerveFloat';
+import { FeverEdgeGlow, FeverFire } from './components/FeverEffects';
 import { PROGRESS_RULES } from '../progression/progression';
 
 /** `mult` = 2 for a Fever round (net wins and losses are doubled on top of the core payout). */
@@ -59,7 +60,14 @@ export function Table({ H }: { H: number }) {
 
   return (
     <>
-      <TableBackground lit={inRound} />
+      <TableBackground lit={inRound} fever={t.screen === 'table' && t.roundIsFever} />
+      {/* High-stakes look for the 3 Fever rounds: orange pulsing edges + subtle fire at the bottom. */}
+      <AnimatePresence>
+        {t.screen === 'table' && t.roundIsFever && <FeverFire key="fire" />}
+      </AnimatePresence>
+      <AnimatePresence>
+        {t.screen === 'table' && t.roundIsFever && <FeverEdgeGlow key="glow" />}
+      </AnimatePresence>
       {t.roundsPlayed > 0 && <DiscardPile />}
 
       {/* top bar */}

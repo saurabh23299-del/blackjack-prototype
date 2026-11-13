@@ -8,16 +8,19 @@ const asset = (p: string) => `${import.meta.env.BASE_URL}assets/${p}`;
 /** The table never moves; only the lights switch on when a round starts and off when it ends.
  *  `table-lights.png` is the lights-only layer taken from the Figma Lit variant (Lit minus Default,
  *  aligned to the Default framing), added on top of the Default table. */
-export function TableBackground({ lit }: { lit: boolean }) {
+export function TableBackground({ lit, fever }: { lit: boolean; fever: boolean }) {
   return (
     <div className="table-bg">
       <img src={asset('table-default.png')} alt="" />
+      {/* High-stakes (Fever) table: same framing as the default art, cross-faded in and out. */}
+      <motion.img src={asset('table-fever.webp')} alt="" initial={false}
+        animate={{ opacity: fever ? 1 : 0 }} transition={{ duration: 0.9, ease: 'easeInOut' }} />
       <motion.img
         className="table-lights"
         src={asset('table-lights.png')} alt=""
         initial={false}
-        animate={lit ? { opacity: [0, 1, 0.35, 1] } : { opacity: 0 }}
-        transition={lit ? { delay: 0.2, duration: 0.32, times: [0, 0.25, 0.55, 1] } : { duration: 0.3 }}
+        animate={lit && !fever ? { opacity: [0, 1, 0.35, 1] } : { opacity: 0 }}
+        transition={lit && !fever ? { delay: 0.2, duration: 0.32, times: [0, 0.25, 0.55, 1] } : { duration: 0.3 }}
       />
     </div>
   );

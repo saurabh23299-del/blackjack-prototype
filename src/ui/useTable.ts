@@ -6,7 +6,7 @@ import {
 } from '../engine';
 import {
   activateFever, canBetP, canDoubleP, canSplitP, cloneProgress, cloneTrack, coinsNeeded, createProgress, declineFever,
-  doubleP, doubleShortP, feverReady, hitP, skipFeverAd, splitP, standP, startRoundP, PROGRESS_RULES,
+  doubleP, doubleShortP, feverReady, hitP, skipFeverAd, splitP, standP, startRoundP, PROTOTYPE_PACING,
   type Award, type Progress, type RoundTrack,
 } from '../progression/progression';
 import { NERVE_FLOAT } from './components/NerveFloat';
@@ -69,8 +69,11 @@ const AWARD_LABEL: Record<Award['kind'], string | null> = {
 function devParam(name: string): string | null {
   return import.meta.env.DEV ? new URLSearchParams(location.search).get(name) : null;
 }
+/** Dev-only: ?rounds=7 starts as if that many rounds were played; ?meter=37.5 pre-fills an unlocked meter. */
 function initialProgress(): Progress {
-  const p = createProgress(Number(devParam('nerve') ?? 0) || 0);
+  const p = createProgress(Number(devParam('nerve') ?? 0) || 0, PROTOTYPE_PACING);
+  const rounds = Number(devParam('rounds') ?? 0) || 0;
+  if (rounds > 0) { p.roundsPlayed = rounds; p.fever.unlocked = rounds >= PROTOTYPE_PACING.unlockAfterRounds; }
   const meter = Number(devParam('meter') ?? 0);
   if (p.fever.unlocked && meter > 0) p.fever.meter = meter;
   return p;
@@ -153,15 +156,19 @@ export function useTable() {
     if (stage !== 'result' || !res || awardedFor.current === res) return;
     awardedFor.current = res;
     const before = res.progressBefore;
-    setShown(s => ({ ...s, roundsLeft: res.progressAfter.fever.roundsLeft }));
-    let nerve = before.nerveTotal;
+    // Round-level changes land as the result shows: Fever rounds tick down, the meter fills by this
+    // round's gain, and (with prototype pacing) the meter appears after the 7th round.
+    setShown(s => ({
+      ...s,
+      roundsLeft: res.progressAfter.fever.roundsLeft,
+      meter: before.fever.meter + res.meterGain,
+      unlocked: s.unlocked || res.unlockedNow,
+    }));
+    if (res.unlockedNow) { setUnlockFlash(true); awardTimers.current.push(window.setTimeout(() => setUnlockFlash(false), 2600)); }
     res.awards.forEach((a, i) => {
       awardTimers.current.push(window.setTimeout(() => {
-        const crossed = !before.fever.unlocked && nerve < PROGRESS_RULES.feverUnlockAt && nerve + a.points >= PROGRESS_RULES.feverUnlockAt;
-        nerve += a.points;
         setFloats(f => [...f, { id: ++floatId.current, points: a.points, label: AWARD_LABEL[a.kind], index: i }]);
-        setShown(s => ({ ...s, nerve: s.nerve + a.points, meter: res.fillsMeter ? s.meter + a.points : s.meter, unlocked: s.unlocked || crossed }));
-        if (crossed) { setUnlockFlash(true); awardTimers.current.push(window.setTimeout(() => setUnlockFlash(false), 2600)); }
+        setShown(s => ({ ...s, nerve: s.nerve + a.points }));
       }, i * NERVE_FLOAT.stagger * 1000));
     });
     // Final sync so the meters always end on the real state.
@@ -289,7 +296,7 @@ export function useTable() {
   const resetTable = () => {
     awardTimers.current.forEach(id => window.clearTimeout(id));
     awardTimers.current = [];
-    const p = createProgress();
+    const p = createProgress(0, PROTOTYPE_PACING);
     setGame(createGame({ balance: START_BALANCE }));
     setProg(p); setTrack(null); setShown(shownFrom(p)); setFloats([]); setUnlockFlash(false); setAdPlaying(false);
     saveBalance(START_BALANCE);

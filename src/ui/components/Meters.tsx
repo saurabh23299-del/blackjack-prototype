@@ -74,7 +74,7 @@ export function FeverMeter({ p, onTap }: { p: ShownProgress; onTap?: () => void 
   const fh = (IN_Y1 - IN_Y0) * frac;
   const hot = state !== 'filling';
   const badge = hot ? 'full' : meter > 0 ? 'half' : 'empty';
-  const label = state === 'active' ? `${p.roundsLeft} LEFT` : state === 'ready' ? 'READY' : `${meter}/${size}`;
+  const label = state === 'active' ? `${p.roundsLeft} LEFT` : state === 'ready' ? 'READY' : `${Math.round(meter)}/${size}`;
   const shownMeter = useCount(meter, 0.5);
   const text = state === 'filling' ? `${shownMeter}/${size}` : label;
 
